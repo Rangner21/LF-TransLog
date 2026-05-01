@@ -1,18 +1,14 @@
 // ============================================================
-// TransLog - Configuração do Supabase
-// Coloque aqui os dados do seu projeto Supabase:
-// Supabase > Project Settings > API
+// TransLog - config.js
+// MODO TESTE LOCAL
 // ============================================================
+// Neste pacote o sistema está rodando SEM Supabase.
+// O login e os cadastros ficam salvos no localStorage do navegador.
+//
+// Login:
+// admin@translog.com
+// admin123
+//
+// Quando for migrar para Supabase, este arquivo pode ser refeito.
 
-const SUPABASE_URL = 'https://SEU_PROJECT_ID.supabase.co';
-const SUPABASE_ANON_KEY = 'SUA_ANON_KEY_AQUI';
-
-if (!window.supabase) {
-  alert('Erro: biblioteca do Supabase não carregou. Verifique sua internet ou o CDN no index.html.');
-}
-
-if (SUPABASE_URL.includes('SEU_PROJECT_ID') || SUPABASE_ANON_KEY.includes('SUA_ANON_KEY')) {
-  console.warn('Configure o SUPABASE_URL e SUPABASE_ANON_KEY no arquivo config.js antes de usar o login.');
-}
-
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+console.log('TransLog em modo teste local, sem banco de dados.');

@@ -3,6 +3,217 @@
 // app.js - Lógica principal do sistema
 // ============================================================
 
+
+// ============================================================
+// MODO TESTE LOCAL - SEM SUPABASE
+// Salva dados no localStorage enquanto o sistema está em teste.
+// Login padrão: admin@translog.com / admin123
+// ============================================================
+
+(function initLocalDatabase() {
+  const defaults = {
+    usuarios: [
+      {
+        id: 'u_admin',
+        nome: 'Administrador',
+        email: 'admin@translog.com',
+        senha: 'admin123',
+        cargo: 'Administrador',
+        permissao: 'administrador',
+        ativo: true,
+        created_at: new Date().toISOString()
+      }
+    ],
+    clientes: [],
+    motoristas: [],
+    veiculos: [],
+    entregas: [],
+    rotas: []
+  };
+
+  Object.keys(defaults).forEach(key => {
+    const storageKey = 'translog_' + key;
+    if (!localStorage.getItem(storageKey)) {
+      localStorage.setItem(storageKey, JSON.stringify(defaults[key]));
+    }
+  });
+})();
+
+function localGetTable(table) {
+  return JSON.parse(localStorage.getItem('translog_' + table) || '[]');
+}
+
+function localSetTable(table, rows) {
+  localStorage.setItem('translog_' + table, JSON.stringify(rows));
+}
+
+function localNewId(prefix) {
+  return prefix + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+}
+
+function attachRelations(table, row) {
+  const clone = { ...row };
+
+  if (table === 'entregas') {
+    const clientes = localGetTable('clientes');
+    const motoristas = localGetTable('motoristas');
+    const veiculos = localGetTable('veiculos');
+    clone.clientes = clientes.find(x => String(x.id) === String(row.cliente_id)) || null;
+    clone.motoristas = motoristas.find(x => String(x.id) === String(row.motorista_id)) || null;
+    clone.veiculos = veiculos.find(x => String(x.id) === String(row.veiculo_id)) || null;
+  }
+
+  if (table === 'rotas') {
+    const motoristas = localGetTable('motoristas');
+    const veiculos = localGetTable('veiculos');
+    clone.motoristas = motoristas.find(x => String(x.id) === String(row.motorista_id)) || null;
+    clone.veiculos = veiculos.find(x => String(x.id) === String(row.veiculo_id)) || null;
+  }
+
+  return clone;
+}
+
+class LocalQuery {
+  constructor(table) {
+    this.table = table;
+    this.filters = [];
+    this._single = false;
+    this._count = false;
+    this._order = null;
+    this._limit = null;
+    this._action = 'select';
+    this._payload = null;
+    this._select = '*';
+  }
+
+  select(cols, opts = {}) {
+    this._action = this._action === 'insert' ? 'insert_select' : 'select';
+    this._select = cols || '*';
+    this._count = !!opts.count;
+    return this;
+  }
+
+  insert(payload) {
+    this._action = 'insert';
+    this._payload = Array.isArray(payload) ? payload : [payload];
+    return this;
+  }
+
+  update(payload) {
+    this._action = 'update';
+    this._payload = payload || {};
+    return this;
+  }
+
+  delete() {
+    this._action = 'delete';
+    return this;
+  }
+
+  eq(col, val) { this.filters.push({ type:'eq', col, val }); return this; }
+  gte(col, val) { this.filters.push({ type:'gte', col, val }); return this; }
+  in(col, vals) { this.filters.push({ type:'in', col, vals }); return this; }
+  ilike(col, pattern) { this.filters.push({ type:'ilike', col, pattern }); return this; }
+  order(col, opts = {}) { this._order = { col, ascending: opts.ascending !== false }; return this; }
+  limit(n) { this._limit = n; return this; }
+  single() { this._single = true; return this; }
+
+  _applyFilters(rows) {
+    return rows.filter(row => this.filters.every(f => {
+      const value = row[f.col];
+      if (f.type === 'eq') return String(value) === String(f.val);
+      if (f.type === 'gte') return String(value || '') >= String(f.val);
+      if (f.type === 'in') return Array.isArray(f.vals) && f.vals.map(String).includes(String(value));
+      if (f.type === 'ilike') {
+        const needle = String(f.pattern || '').replace(/%/g, '').toLowerCase();
+        return String(value || '').toLowerCase().includes(needle);
+      }
+      return true;
+    }));
+  }
+
+  _pickColumns(row) {
+    if (!this._select || this._select === '*' || this._select.includes('(')) {
+      return attachRelations(this.table, row);
+    }
+
+    const cols = this._select.split(',').map(c => c.trim()).filter(Boolean);
+    const out = {};
+    cols.forEach(c => out[c] = row[c]);
+    return out;
+  }
+
+  async _execute() {
+    let rows = localGetTable(this.table);
+
+    if (this._action === 'insert' || this._action === 'insert_select') {
+      const inserted = this._payload.map(item => ({
+        id: item.id || localNewId(this.table.slice(0, 3)),
+        created_at: item.created_at || new Date().toISOString(),
+        ...item
+      }));
+      rows = [...inserted, ...rows];
+      localSetTable(this.table, rows);
+      const data = inserted.map(r => attachRelations(this.table, r));
+      return { data: this._single ? data[0] : data, error: null, count: data.length };
+    }
+
+    const filtered = this._applyFilters(rows);
+
+    if (this._action === 'update') {
+      const updated = [];
+      rows = rows.map(row => {
+        const match = filtered.some(f => String(f.id) === String(row.id));
+        if (match) {
+          const next = { ...row, ...this._payload };
+          updated.push(next);
+          return next;
+        }
+        return row;
+      });
+      localSetTable(this.table, rows);
+      return { data: this._single ? updated[0] : updated, error: null, count: updated.length };
+    }
+
+    if (this._action === 'delete') {
+      const ids = new Set(filtered.map(r => String(r.id)));
+      rows = rows.filter(row => !ids.has(String(row.id)));
+      localSetTable(this.table, rows);
+      return { data: filtered, error: null, count: filtered.length };
+    }
+
+    let data = filtered.map(r => this._pickColumns(r));
+
+    if (this._order) {
+      const { col, ascending } = this._order;
+      data.sort((a,b) => {
+        const av = a[col] ?? '';
+        const bv = b[col] ?? '';
+        return ascending ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+      });
+    }
+
+    if (this._limit) data = data.slice(0, this._limit);
+
+    return {
+      data: this._single ? (data[0] || null) : data,
+      error: this._single && !data[0] ? { message: 'Registro não encontrado' } : null,
+      count: data.length
+    };
+  }
+
+  then(resolve, reject) {
+    return this._execute().then(resolve, reject);
+  }
+}
+
+window.supabase = {
+  from(table) {
+    return new LocalQuery(table);
+  }
+};
+
+
 // ============================================================
 // ESTADO GLOBAL DA APLICAÇÃO
 // ============================================================
@@ -92,7 +303,8 @@ setTimeout(() => div.remove(), 3500);
 
 async function handleLogin(e) {
 e.preventDefault();
-const email = document.getElementById('login-email').value.trim();
+
+const email = document.getElementById('login-email').value.trim().toLowerCase();
 const pass  = document.getElementById('login-pass').value;
 const errEl = document.getElementById('login-error');
 const btn   = document.getElementById('login-btn');
@@ -102,27 +314,23 @@ btn.disabled = true;
 btn.innerHTML = '<span class="loading-spinner"></span> Entrando...';
 
 try {
-// Busca usuário na tabela usuarios (autenticação customizada)
-const { data, error } = await supabase
-.from('usuarios')
-.select('*')
-.eq('email', email)
-.eq('senha', pass)
-.eq('ativo', true)
-.single();
-if (error || !data) {
-  throw new Error('E-mail ou senha inválidos.');
+const usuarios = JSON.parse(localStorage.getItem('translog_usuarios') || '[]');
+const user = usuarios.find(u =>
+  String(u.email).toLowerCase() === email &&
+  String(u.senha) === String(pass) &&
+  u.ativo !== false
+);
+
+if (!user) {
+  throw new Error('E-mail ou senha inválidos. Use admin@translog.com / admin123');
 }
 
-App.user = data;
-sessionStorage.setItem('translog_user', JSON.stringify(data));
+App.user = user;
+localStorage.setItem('translog_user', JSON.stringify(user));
+sessionStorage.setItem('translog_user', JSON.stringify(user));
 initApp();
 } catch (err) {
-let msg = err.message || 'Erro ao entrar.';
-if (String(msg).includes('Failed to fetch') || String(msg).includes('fetch')) {
-  msg = 'Não consegui conectar ao Supabase. Confira o config.js (URL e ANON KEY) e se as tabelas foram criadas.';
-}
-errEl.textContent = msg;
+errEl.textContent = err.message || 'Erro ao entrar.';
 errEl.classList.add('show');
 } finally {
 btn.disabled = false;
@@ -133,6 +341,7 @@ btn.innerHTML = 'Entrar no sistema';
 function logout() {
 App.user = null;
 sessionStorage.removeItem('translog_user');
+localStorage.removeItem('translog_user');
 showPage('login');
 document.getElementById('app-layout').style.display = 'none';
 document.getElementById('page-login').style.display = 'flex';
@@ -1166,7 +1375,7 @@ document.getElementById('sidebar').classList.toggle('open');
 document.addEventListener('DOMContentLoaded', () => {
 
 // Verifica sessão existente
-const savedUser = sessionStorage.getItem('translog_user');
+const savedUser = localStorage.getItem('translog_user') || sessionStorage.getItem('translog_user');
 if (savedUser) {
 App.user = JSON.parse(savedUser);
 initApp();
