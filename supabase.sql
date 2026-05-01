@@ -95,23 +95,17 @@ CREATE TABLE IF NOT EXISTS entregas (
 );
 
 -- ============================================================
--- POLÍTICAS DE SEGURANÇA (RLS)
--- Desabilitar RLS para desenvolvimento / habilitar conforme necessidade
+-- POLÍTICAS DE SEGURANÇA (MVP)
+-- Como este sistema usa login customizado via tabela usuarios e CDN,
+-- deixe o RLS desativado neste MVP para evitar bloqueio no login.
+-- Em produção, o ideal é migrar para Supabase Auth + RLS.
 -- ============================================================
-ALTER TABLE usuarios ENABLE ROW LEVEL SECURITY;
-ALTER TABLE clientes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE motoristas ENABLE ROW LEVEL SECURITY;
-ALTER TABLE veiculos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE rotas ENABLE ROW LEVEL SECURITY;
-ALTER TABLE entregas ENABLE ROW LEVEL SECURITY;
-
--- Política permissiva para autenticados (ajustar em produção)
-CREATE POLICY "Acesso total autenticado" ON usuarios FOR ALL USING (true);
-CREATE POLICY "Acesso total autenticado" ON clientes FOR ALL USING (true);
-CREATE POLICY "Acesso total autenticado" ON motoristas FOR ALL USING (true);
-CREATE POLICY "Acesso total autenticado" ON veiculos FOR ALL USING (true);
-CREATE POLICY "Acesso total autenticado" ON rotas FOR ALL USING (true);
-CREATE POLICY "Acesso total autenticado" ON entregas FOR ALL USING (true);
+ALTER TABLE usuarios DISABLE ROW LEVEL SECURITY;
+ALTER TABLE clientes DISABLE ROW LEVEL SECURITY;
+ALTER TABLE motoristas DISABLE ROW LEVEL SECURITY;
+ALTER TABLE veiculos DISABLE ROW LEVEL SECURITY;
+ALTER TABLE rotas DISABLE ROW LEVEL SECURITY;
+ALTER TABLE entregas DISABLE ROW LEVEL SECURITY;
 
 -- ============================================================
 -- DADOS INICIAIS - Usuário administrador padrão

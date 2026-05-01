@@ -110,7 +110,6 @@ const { data, error } = await supabase
 .eq('senha', pass)
 .eq('ativo', true)
 .single();
-
 if (error || !data) {
   throw new Error('E-mail ou senha inválidos.');
 }
@@ -118,9 +117,12 @@ if (error || !data) {
 App.user = data;
 sessionStorage.setItem('translog_user', JSON.stringify(data));
 initApp();
-
 } catch (err) {
-errEl.textContent = err.message;
+let msg = err.message || 'Erro ao entrar.';
+if (String(msg).includes('Failed to fetch') || String(msg).includes('fetch')) {
+  msg = 'Não consegui conectar ao Supabase. Confira o config.js (URL e ANON KEY) e se as tabelas foram criadas.';
+}
+errEl.textContent = msg;
 errEl.classList.add('show');
 } finally {
 btn.disabled = false;
@@ -243,7 +245,6 @@ supabase.from('entregas').select('id', {count:'exact'}).eq('status','em_rota'),
 supabase.from('entregas').select('id', {count:'exact'}).eq('status','entregue'),
 supabase.from('motoristas').select('id', {count:'exact'}).eq('status','ativo'),
 ]);
-
 document.getElementById('dash-today').textContent   = all.count    ?? 0;
 document.getElementById('dash-pending').textContent = pending.count ?? 0;
 document.getElementById('dash-route').textContent   = inRoute.count ?? 0;
@@ -296,7 +297,6 @@ if (!mots || mots.length === 0) {
     </div>`;
   });
 }
-
 } catch(err) {
 console.error(err);
 toast('Erro ao carregar dashboard', 'error');
@@ -316,7 +316,6 @@ let query = supabase
 .from('entregas')
 .select('id,numero_nf,destino,cidade,uf,status,data_prevista,observacao,clientes(nome),motoristas(nome),veiculos(placa)')
 .order('created_at', { ascending: false });
-
 if (filters.status)    query = query.eq('status', filters.status);
 if (filters.motorista) query = query.eq('motorista_id', filters.motorista);
 if (filters.cliente)   query = query.ilike('clientes.nome', `%${filters.cliente}%`);
@@ -356,7 +355,6 @@ data.forEach(e => {
     </td>
   </tr>`;
 });
-
 } catch(err) {
 console.error(err);
 toast('Erro ao carregar entregas', 'error');
@@ -496,7 +494,6 @@ let query = supabase.from('clientes').select('*').eq('ativo', true).order('nome'
 if (q) query = query.ilike('nome', `%${q}%`);
 const { data, error } = await query;
 if (error) throw error;
-
 const tbody = document.getElementById('clientes-tbody');
 tbody.innerHTML = '';
 if (!data || data.length === 0) {
@@ -521,7 +518,6 @@ data.forEach(c => {
     </td>
   </tr>`;
 });
-
 } catch(err) {
 toast('Erro ao carregar clientes', 'error');
 } finally {
@@ -609,7 +605,6 @@ let query = supabase.from('motoristas').select('*').order('nome');
 if (q) query = query.ilike('nome', `%${q}%`);
 const { data, error } = await query;
 if (error) throw error;
-
 const tbody = document.getElementById('motoristas-tbody');
 tbody.innerHTML = '';
 if (!data || data.length === 0) {
@@ -633,7 +628,6 @@ data.forEach(m => {
     </td>
   </tr>`;
 });
-
 } catch(err) {
 toast('Erro ao carregar motoristas', 'error');
 } finally {
@@ -716,7 +710,6 @@ let query = supabase.from('veiculos').select('*').order('placa');
 if (q) query = query.ilike('placa', `%${q}%`);
 const { data, error } = await query;
 if (error) throw error;
-
 const tbody = document.getElementById('veiculos-tbody');
 tbody.innerHTML = '';
 if (!data || data.length === 0) {
@@ -741,7 +734,6 @@ data.forEach(v => {
     </td>
   </tr>`;
 });
-
 } catch(err) {
 toast('Erro ao carregar veículos', 'error');
 } finally {
@@ -830,7 +822,6 @@ let query = supabase
 if (q) query = query.ilike('nome', `%${q}%`);
 const { data, error } = await query;
 if (error) throw error;
-
 const tbody = document.getElementById('rotas-tbody');
 tbody.innerHTML = '';
 if (!data || data.length === 0) {
@@ -856,7 +847,6 @@ data.forEach(r => {
     </td>
   </tr>`;
 });
-
 } catch(err) {
 toast('Erro ao carregar rotas', 'error');
 } finally {
@@ -943,7 +933,6 @@ const [rotaRes, entregasRes] = await Promise.all([
 supabase.from('rotas').select('*,motoristas(nome),veiculos(placa,modelo)').eq('id', rotaId).single(),
 supabase.from('entregas').select('id,numero_nf,destino,cidade,uf,status,clientes(nome)').eq('rota_id', rotaId),
 ]);
-
 const rota = rotaRes.data;
 const entregas = entregasRes.data || [];
 
@@ -992,7 +981,6 @@ sel.innerHTML = '<option value="">- Selecione uma entrega -</option>';
 
 hideLoading();
 document.getElementById('modal-rota-detail').classList.add('show');
-
 } catch(err) {
 hideLoading();
 toast('Erro ao abrir rota', 'error');
@@ -1048,7 +1036,6 @@ supabase.from('entregas').select('numero_nf,destino,cidade,uf,clientes(nome),sta
 ]);
 const rota = rotaRes.data;
 const entregas = entRes.data || [];
-
 let texto = `🚚 *ROTA: ${rota.nome}*\n`;
 texto += `📅 Data: ${fmtDate(rota.data)}\n`;
 texto += `👤 Motorista: ${rota.motoristas?.nome || '-'}\n`;
@@ -1074,7 +1061,6 @@ navigator.clipboard.writeText(texto).then(() => {
   document.body.removeChild(el);
   toast('Resumo copiado!', 'success');
 });
-
 } catch(err) {
 toast('Erro ao gerar resumo', 'error');
 } finally {
@@ -1104,7 +1090,6 @@ const [rotasRes, entRes] = await Promise.all([
 supabase.from('rotas').select('id,nome,data,status,motoristas(nome),veiculos(placa)').eq('status','finalizada').order('data', { ascending: false }).limit(20),
 supabase.from('entregas').select('id,numero_nf,destino,cidade,uf,status,data_prevista,clientes(nome)').in('status',['entregue','cancelada']).order('created_at', { ascending: false }).limit(30),
 ]);
-
 // Rotas finalizadas
 const rotasTbody = document.getElementById('hist-rotas-tbody');
 rotasTbody.innerHTML = '';
@@ -1140,7 +1125,6 @@ if (entregas.length === 0) {
     </tr>`;
   });
 }
-
 } catch(err) {
 toast('Erro ao carregar histórico', 'error');
 } finally {

@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="TransLog — Sistema de Gestão para Transportadoras" />
-  <title>TransLog — Gestão de Transportes</title>
+  <meta name="description" content="TransLog - Sistema de Gestão para Transportadoras" />
+  <title>TransLog - Gestão de Transportes</title>
 
   <!-- Supabase via CDN -->
 
@@ -44,9 +44,7 @@
         <h1>TransLog</h1>
         <p>Sistema de Gestão para Transportadoras</p>
       </div>
-
-```
-  <h2>Bem-vindo</h2>
+<h2>Bem-vindo</h2>
   <p class="sub">Faça login para acessar o painel</p>
 
   <div id="login-error" class="login-error"></div>
@@ -69,9 +67,7 @@
     Acesso padrão: admin@translog.com / admin123
   </p>
 </div>
-```
-
-  </div>
+</div>
 </div>
 
 <!-- ============================================================
@@ -92,8 +88,6 @@
         </div>
       </div>
     </div>
-
-```
 <nav class="sidebar-nav">
   <div class="nav-section-label">Principal</div>
 
@@ -130,21 +124,17 @@
   <div class="user-card">
     <div class="user-avatar">👤</div>
     <div class="user-info">
-      <strong id="user-name">—</strong>
-      <small id="user-role">—</small>
+      <strong id="user-name">-</strong>
+      <small id="user-role">-</small>
     </div>
     <button class="btn-logout" onclick="logout()" title="Sair">⏻</button>
   </div>
 </div>
-```
-
-  </aside>
+</aside>
 
   <!-- ──────────── CONTEÚDO PRINCIPAL ──────────── -->
 
   <div class="main-content">
-
-```
 <!-- TOPBAR -->
 <header class="topbar">
   <div class="topbar-left">
@@ -174,27 +164,27 @@
     <div class="stats-grid">
       <div class="stat-card blue">
         <div class="stat-icon">📦</div>
-        <div class="stat-value" id="dash-today">—</div>
+        <div class="stat-value" id="dash-today">-</div>
         <div class="stat-label">Entregas do dia</div>
       </div>
       <div class="stat-card yellow">
         <div class="stat-icon">⏳</div>
-        <div class="stat-value" id="dash-pending">—</div>
+        <div class="stat-value" id="dash-pending">-</div>
         <div class="stat-label">Pendentes</div>
       </div>
       <div class="stat-card orange">
         <div class="stat-icon">🚚</div>
-        <div class="stat-value" id="dash-route">—</div>
+        <div class="stat-value" id="dash-route">-</div>
         <div class="stat-label">Em Rota</div>
       </div>
       <div class="stat-card green">
         <div class="stat-icon">✅</div>
-        <div class="stat-value" id="dash-done">—</div>
+        <div class="stat-value" id="dash-done">-</div>
         <div class="stat-label">Concluídas</div>
       </div>
       <div class="stat-card purple">
         <div class="stat-icon">🧑‍✈️</div>
-        <div class="stat-value" id="dash-drivers">—</div>
+        <div class="stat-value" id="dash-drivers">-</div>
         <div class="stat-label">Motoristas ativos</div>
       </div>
     </div>
@@ -464,9 +454,7 @@
   </section>
 
 </main><!-- /content-area -->
-```
-
-  </div><!-- /main-content -->
+</div><!-- /main-content -->
 
   <!-- ──────────── BOTTOM NAV (mobile) ──────────── -->
 
@@ -751,7 +739,7 @@
         <div class="form-row">
           <div class="form-group">
             <label>Nome da Rota *</label>
-            <input type="text" id="rota-nome" placeholder="Rota SP Norte — 01/06" required />
+            <input type="text" id="rota-nome" placeholder="Rota SP Norte - 01/06" required />
           </div>
           <div class="form-group">
             <label>Data *</label>
@@ -800,9 +788,7 @@
     </div>
     <div class="modal-body">
       <input type="hidden" id="rota-detail-id" />
-
-```
-  <!-- Info da rota -->
+<!-- Info da rota -->
   <div id="rota-detail-info"></div>
 
   <!-- Entregas vinculadas -->
@@ -816,7 +802,7 @@
     <h4 style="font-size:13px;margin-bottom:10px;color:var(--text2)">➕ Vincular Entrega</h4>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <select id="add-entrega-select" style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-s);padding:9px 12px;color:var(--text);font-size:13px;outline:none;min-width:200px">
-        <option value="">— Selecione uma entrega livre —</option>
+        <option value="">- Selecione uma entrega livre -</option>
       </select>
       <button class="btn btn-success" onclick="vincularEntrega()">Vincular</button>
     </div>
@@ -829,9 +815,7 @@
   </div>
   <button class="btn btn-ghost" onclick="closeModal('modal-rota-detail')">Fechar</button>
 </div>
-```
-
-  </div>
+</div>
 </div>
 
 <!-- ============================================================
