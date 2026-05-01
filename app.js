@@ -207,11 +207,15 @@ class LocalQuery {
   }
 }
 
-window.supabase = {
+window.db = {
   from(table) {
     return new LocalQuery(table);
   }
 };
+
+const db = window.db;
+
+
 
 
 // ============================================================
@@ -379,9 +383,9 @@ await loadCaches();
 /** Carrega dados frequentes em cache para popular selects */
 async function loadCaches() {
 const [c, m, v] = await Promise.all([
-supabase.from('clientes').select('id,nome').eq('ativo', true).order('nome'),
-supabase.from('motoristas').select('id,nome').eq('status','ativo').order('nome'),
-supabase.from('veiculos').select('id,placa,modelo').eq('status','disponivel').order('placa'),
+db.from('clientes').select('id,nome').eq('ativo', true).order('nome'),
+db.from('motoristas').select('id,nome').eq('status','ativo').order('nome'),
+db.from('veiculos').select('id,placa,modelo').eq('status','disponivel').order('placa'),
 ]);
 App.cache.clientes   = c.data || [];
 App.cache.motoristas = m.data || [];
@@ -448,11 +452,11 @@ showLoading('Carregando dashboard...');
 try {
 const today = todayISO();
 const [all, pending, inRoute, done, drivers] = await Promise.all([
-supabase.from('entregas').select('id', {count:'exact'}).gte('data_prevista', today),
-supabase.from('entregas').select('id', {count:'exact'}).eq('status','pendente'),
-supabase.from('entregas').select('id', {count:'exact'}).eq('status','em_rota'),
-supabase.from('entregas').select('id', {count:'exact'}).eq('status','entregue'),
-supabase.from('motoristas').select('id', {count:'exact'}).eq('status','ativo'),
+db.from('entregas').select('id', {count:'exact'}).gte('data_prevista', today),
+db.from('entregas').select('id', {count:'exact'}).eq('status','pendente'),
+db.from('entregas').select('id', {count:'exact'}).eq('status','em_rota'),
+db.from('entregas').select('id', {count:'exact'}).eq('status','entregue'),
+db.from('motoristas').select('id', {count:'exact'}).eq('status','ativo'),
 ]);
 document.getElementById('dash-today').textContent   = all.count    ?? 0;
 document.getElementById('dash-pending').textContent = pending.count ?? 0;
@@ -461,7 +465,7 @@ document.getElementById('dash-done').textContent    = done.count    ?? 0;
 document.getElementById('dash-drivers').textContent = drivers.count ?? 0;
 
 // Últimas entregas
-const { data: recent } = await supabase
+const { data: recent } = await db
   .from('entregas')
   .select('id,numero_nf,destino,cidade,uf,status,data_prevista,clientes(nome)')
   .order('created_at', { ascending: false })
@@ -484,7 +488,7 @@ if (!recent || recent.length === 0) {
 }
 
 // Motoristas ativos recentes
-const { data: mots } = await supabase
+const { data: mots } = await db
   .from('motoristas')
   .select('id,nome,telefone,cnh,status')
   .eq('status','ativo')
@@ -521,7 +525,7 @@ hideLoading();
 async function loadEntregas(filters = {}) {
 showLoading('Carregando entregas...');
 try {
-let query = supabase
+let query = db
 .from('entregas')
 .select('id,numero_nf,destino,cidade,uf,status,data_prevista,observacao,clientes(nome),motoristas(nome),veiculos(placa)')
 .order('created_at', { ascending: false });
@@ -587,7 +591,7 @@ fillSelect('entrega-veiculo',   App.cache.veiculos,   'id', v => `${v.placa} - $
 if (id) {
 document.getElementById('modal-entrega-title').textContent = 'Editar Entrega';
 showLoading();
-const { data } = await supabase.from('entregas').select('*').eq('id',id).single();
+const { data } = await db.from('entregas').select('*').eq('id',id).single();
 hideLoading();
 if (data) {
 document.getElementById('entrega-id').value          = data.id;
@@ -633,9 +637,9 @@ const payload = { numero_nf, cliente_id, destino, cidade, uf, data_prevista, mot
 try {
 let error;
 if (id) {
-({ error } = await supabase.from('entregas').update(payload).eq('id', id));
+({ error } = await db.from('entregas').update(payload).eq('id', id));
 } else {
-({ error } = await supabase.from('entregas').insert(payload));
+({ error } = await db.from('entregas').insert(payload));
 }
 if (error) throw error;
 toast(id ? 'Entrega atualizada!' : 'Entrega criada!', 'success');
@@ -665,7 +669,7 @@ async function saveStatus() {
 const id     = document.getElementById('status-id').value;
 const status = document.getElementById('status-select').value;
 showLoading();
-const { error } = await supabase.from('entregas').update({ status }).eq('id', id);
+const { error } = await db.from('entregas').update({ status }).eq('id', id);
 hideLoading();
 if (error) { toast('Erro ao atualizar status', 'error'); return; }
 toast('Status atualizado!', 'success');
@@ -676,7 +680,7 @@ loadEntregas();
 async function deleteEntrega(id) {
 if (!confirm('Excluir esta entrega?')) return;
 showLoading();
-const { error } = await supabase.from('entregas').delete().eq('id', id);
+const { error } = await db.from('entregas').delete().eq('id', id);
 hideLoading();
 if (error) { toast('Erro ao excluir', 'error'); return; }
 toast('Entrega excluída', 'success');
@@ -699,7 +703,7 @@ q:         document.getElementById('filter-q').value,
 async function loadClientes(q = '') {
 showLoading('Carregando clientes...');
 try {
-let query = supabase.from('clientes').select('*').eq('ativo', true).order('nome');
+let query = db.from('clientes').select('*').eq('ativo', true).order('nome');
 if (q) query = query.ilike('nome', `%${q}%`);
 const { data, error } = await query;
 if (error) throw error;
@@ -740,7 +744,7 @@ document.getElementById('cliente-id').value = '';
 if (id) {
 document.getElementById('modal-cliente-title').textContent = 'Editar Cliente';
 showLoading();
-const { data } = await supabase.from('clientes').select('*').eq('id',id).single();
+const { data } = await db.from('clientes').select('*').eq('id',id).single();
 hideLoading();
 if (data) {
 document.getElementById('cliente-id').value       = data.id;
@@ -777,9 +781,9 @@ showLoading('Salvando...');
 try {
 let error;
 if (id) {
-({ error } = await supabase.from('clientes').update(payload).eq('id', id));
+({ error } = await db.from('clientes').update(payload).eq('id', id));
 } else {
-({ error } = await supabase.from('clientes').insert(payload));
+({ error } = await db.from('clientes').insert(payload));
 }
 if (error) throw error;
 toast(id ? 'Cliente atualizado!' : 'Cliente cadastrado!', 'success');
@@ -796,7 +800,7 @@ hideLoading();
 async function deleteCliente(id) {
 if (!confirm('Excluir este cliente?')) return;
 showLoading();
-const { error } = await supabase.from('clientes').update({ ativo: false }).eq('id', id);
+const { error } = await db.from('clientes').update({ ativo: false }).eq('id', id);
 hideLoading();
 if (error) { toast('Erro ao excluir', 'error'); return; }
 toast('Cliente removido', 'success');
@@ -810,7 +814,7 @@ loadClientes();
 async function loadMotoristas(q = '') {
 showLoading('Carregando motoristas...');
 try {
-let query = supabase.from('motoristas').select('*').order('nome');
+let query = db.from('motoristas').select('*').order('nome');
 if (q) query = query.ilike('nome', `%${q}%`);
 const { data, error } = await query;
 if (error) throw error;
@@ -850,7 +854,7 @@ document.getElementById('motorista-id').value = '';
 if (id) {
 document.getElementById('modal-motorista-title').textContent = 'Editar Motorista';
 showLoading();
-const { data } = await supabase.from('motoristas').select('*').eq('id',id).single();
+const { data } = await db.from('motoristas').select('*').eq('id',id).single();
 hideLoading();
 if (data) {
 document.getElementById('motorista-id').value      = data.id;
@@ -882,9 +886,9 @@ showLoading('Salvando...');
 try {
 let error;
 if (id) {
-({ error } = await supabase.from('motoristas').update(payload).eq('id', id));
+({ error } = await db.from('motoristas').update(payload).eq('id', id));
 } else {
-({ error } = await supabase.from('motoristas').insert(payload));
+({ error } = await db.from('motoristas').insert(payload));
 }
 if (error) throw error;
 toast(id ? 'Motorista atualizado!' : 'Motorista cadastrado!', 'success');
@@ -901,7 +905,7 @@ hideLoading();
 async function deleteMotorista(id) {
 if (!confirm('Excluir este motorista?')) return;
 showLoading();
-const { error } = await supabase.from('motoristas').delete().eq('id', id);
+const { error } = await db.from('motoristas').delete().eq('id', id);
 hideLoading();
 if (error) { toast('Erro ao excluir', 'error'); return; }
 toast('Motorista removido', 'success');
@@ -915,7 +919,7 @@ loadMotoristas();
 async function loadVeiculos(q = '') {
 showLoading('Carregando veículos...');
 try {
-let query = supabase.from('veiculos').select('*').order('placa');
+let query = db.from('veiculos').select('*').order('placa');
 if (q) query = query.ilike('placa', `%${q}%`);
 const { data, error } = await query;
 if (error) throw error;
@@ -956,7 +960,7 @@ document.getElementById('veiculo-id').value = '';
 if (id) {
 document.getElementById('modal-veiculo-title').textContent = 'Editar Veículo';
 showLoading();
-const { data } = await supabase.from('veiculos').select('*').eq('id',id).single();
+const { data } = await db.from('veiculos').select('*').eq('id',id).single();
 hideLoading();
 if (data) {
 document.getElementById('veiculo-id').value        = data.id;
@@ -991,9 +995,9 @@ showLoading('Salvando...');
 try {
 let error;
 if (id) {
-({ error } = await supabase.from('veiculos').update(payload).eq('id', id));
+({ error } = await db.from('veiculos').update(payload).eq('id', id));
 } else {
-({ error } = await supabase.from('veiculos').insert(payload));
+({ error } = await db.from('veiculos').insert(payload));
 }
 if (error) throw error;
 toast(id ? 'Veículo atualizado!' : 'Veículo cadastrado!', 'success');
@@ -1010,7 +1014,7 @@ hideLoading();
 async function deleteVeiculo(id) {
 if (!confirm('Excluir este veículo?')) return;
 showLoading();
-const { error } = await supabase.from('veiculos').delete().eq('id', id);
+const { error } = await db.from('veiculos').delete().eq('id', id);
 hideLoading();
 if (error) { toast('Erro ao excluir', 'error'); return; }
 toast('Veículo removido', 'success');
@@ -1024,7 +1028,7 @@ loadVeiculos();
 async function loadRotas(q = '') {
 showLoading('Carregando rotas...');
 try {
-let query = supabase
+let query = db
 .from('rotas')
 .select('id,nome,data,status,observacao,motoristas(nome),veiculos(placa)')
 .order('created_at', { ascending: false });
@@ -1070,8 +1074,8 @@ document.getElementById('rota-id').value = '';
 
 // Popula selects com TODOS motoristas/veículos (não só disponíveis)
 const [mots, veics] = await Promise.all([
-supabase.from('motoristas').select('id,nome').eq('status','ativo').order('nome'),
-supabase.from('veiculos').select('id,placa,modelo').order('placa'),
+db.from('motoristas').select('id,nome').eq('status','ativo').order('nome'),
+db.from('veiculos').select('id,placa,modelo').order('placa'),
 ]);
 fillSelect('rota-motorista', mots.data || [], 'id','nome');
 fillSelect('rota-veiculo',   veics.data || [], 'id', v => `${v.placa} - ${v.modelo}`);
@@ -1079,7 +1083,7 @@ fillSelect('rota-veiculo',   veics.data || [], 'id', v => `${v.placa} - ${v.mode
 if (id) {
 document.getElementById('modal-rota-title').textContent = 'Editar Rota';
 showLoading();
-const { data } = await supabase.from('rotas').select('*').eq('id',id).single();
+const { data } = await db.from('rotas').select('*').eq('id',id).single();
 hideLoading();
 if (data) {
 document.getElementById('rota-id').value         = data.id;
@@ -1117,10 +1121,10 @@ showLoading('Salvando...');
 try {
 let error, savedData;
 if (id) {
-({ error } = await supabase.from('rotas').update(payload).eq('id', id));
+({ error } = await db.from('rotas').update(payload).eq('id', id));
 savedData = { id };
 } else {
-const res = await supabase.from('rotas').insert(payload).select().single();
+const res = await db.from('rotas').insert(payload).select().single();
 error = res.error;
 savedData = res.data;
 }
@@ -1139,8 +1143,8 @@ async function openRotaDetail(rotaId) {
 showLoading('Carregando rota...');
 try {
 const [rotaRes, entregasRes] = await Promise.all([
-supabase.from('rotas').select('*,motoristas(nome),veiculos(placa,modelo)').eq('id', rotaId).single(),
-supabase.from('entregas').select('id,numero_nf,destino,cidade,uf,status,clientes(nome)').eq('rota_id', rotaId),
+db.from('rotas').select('*,motoristas(nome),veiculos(placa,modelo)').eq('id', rotaId).single(),
+db.from('entregas').select('id,numero_nf,destino,cidade,uf,status,clientes(nome)').eq('rota_id', rotaId),
 ]);
 const rota = rotaRes.data;
 const entregas = entregasRes.data || [];
@@ -1176,7 +1180,7 @@ if (entregas.length === 0) {
 document.getElementById('rota-entregas-list').innerHTML = entHtml;
 
 // Select para vincular entregas livres
-const { data: livres } = await supabase
+const { data: livres } = await db
   .from('entregas')
   .select('id,numero_nf,destino,cidade,uf')
   .is('rota_id', null)
@@ -1201,7 +1205,7 @@ const rotaId    = document.getElementById('rota-detail-id').value;
 const entregaId = document.getElementById('add-entrega-select').value;
 if (!entregaId) { toast('Selecione uma entrega', 'error'); return; }
 showLoading();
-const { error } = await supabase.from('entregas').update({ rota_id: rotaId, status: 'em_rota' }).eq('id', entregaId);
+const { error } = await db.from('entregas').update({ rota_id: rotaId, status: 'em_rota' }).eq('id', entregaId);
 hideLoading();
 if (error) { toast('Erro ao vincular', 'error'); return; }
 toast('Entrega vinculada!', 'success');
@@ -1211,7 +1215,7 @@ openRotaDetail(rotaId);
 async function desvincularEntrega(entregaId, rotaId) {
 if (!confirm('Desvincular esta entrega da rota?')) return;
 showLoading();
-const { error } = await supabase.from('entregas').update({ rota_id: null, status: 'pendente' }).eq('id', entregaId);
+const { error } = await db.from('entregas').update({ rota_id: null, status: 'pendente' }).eq('id', entregaId);
 hideLoading();
 if (error) { toast('Erro ao desvincular', 'error'); return; }
 toast('Entrega desvinculada', 'success');
@@ -1223,8 +1227,8 @@ const rotaId = document.getElementById('rota-detail-id').value;
 if (!confirm('Finalizar esta rota? As entregas em rota serão marcadas como Entregue.')) return;
 showLoading('Finalizando rota...');
 try {
-await supabase.from('rotas').update({ status: 'finalizada' }).eq('id', rotaId);
-await supabase.from('entregas').update({ status: 'entregue' }).eq('rota_id', rotaId).eq('status','em_rota');
+await db.from('rotas').update({ status: 'finalizada' }).eq('id', rotaId);
+await db.from('entregas').update({ status: 'entregue' }).eq('rota_id', rotaId).eq('status','em_rota');
 toast('Rota finalizada com sucesso!', 'success');
 closeModal('modal-rota-detail');
 loadRotas();
@@ -1240,8 +1244,8 @@ const rotaId = document.getElementById('rota-detail-id').value;
 showLoading();
 try {
 const [rotaRes, entRes] = await Promise.all([
-supabase.from('rotas').select('nome,data,motoristas(nome),veiculos(placa,modelo)').eq('id', rotaId).single(),
-supabase.from('entregas').select('numero_nf,destino,cidade,uf,clientes(nome),status').eq('rota_id', rotaId),
+db.from('rotas').select('nome,data,motoristas(nome),veiculos(placa,modelo)').eq('id', rotaId).single(),
+db.from('entregas').select('numero_nf,destino,cidade,uf,clientes(nome),status').eq('rota_id', rotaId),
 ]);
 const rota = rotaRes.data;
 const entregas = entRes.data || [];
@@ -1280,8 +1284,8 @@ hideLoading();
 async function deleteRota(id) {
 if (!confirm('Excluir esta rota? As entregas vinculadas serão desvinculadas.')) return;
 showLoading();
-await supabase.from('entregas').update({ rota_id: null }).eq('rota_id', id);
-const { error } = await supabase.from('rotas').delete().eq('id', id);
+await db.from('entregas').update({ rota_id: null }).eq('rota_id', id);
+const { error } = await db.from('rotas').delete().eq('id', id);
 hideLoading();
 if (error) { toast('Erro ao excluir rota', 'error'); return; }
 toast('Rota excluída', 'success');
@@ -1296,8 +1300,8 @@ async function loadHistorico() {
 showLoading('Carregando histórico...');
 try {
 const [rotasRes, entRes] = await Promise.all([
-supabase.from('rotas').select('id,nome,data,status,motoristas(nome),veiculos(placa)').eq('status','finalizada').order('data', { ascending: false }).limit(20),
-supabase.from('entregas').select('id,numero_nf,destino,cidade,uf,status,data_prevista,clientes(nome)').in('status',['entregue','cancelada']).order('created_at', { ascending: false }).limit(30),
+db.from('rotas').select('id,nome,data,status,motoristas(nome),veiculos(placa)').eq('status','finalizada').order('data', { ascending: false }).limit(20),
+db.from('entregas').select('id,numero_nf,destino,cidade,uf,status,data_prevista,clientes(nome)').in('status',['entregue','cancelada']).order('created_at', { ascending: false }).limit(30),
 ]);
 // Rotas finalizadas
 const rotasTbody = document.getElementById('hist-rotas-tbody');
@@ -1404,7 +1408,7 @@ overlay.classList.remove('show');
 
 // Filtro motorista para entregas
 (async () => {
-const { data } = await supabase.from('motoristas').select('id,nome').eq('status','ativo').order('nome');
+const { data } = await db.from('motoristas').select('id,nome').eq('status','ativo').order('nome');
 fillSelect('filter-motorista', data || [], 'id', 'nome');
 })();
 });
