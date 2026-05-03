@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="TransLog - Sistema de Gestão para Transportadoras" />
+  <title>TransLog - Gestão de Transportes</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Supabase via CDN -->
+<!-- Estilos -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- Icons Sprite System -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="icon-truck" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-1.39-1.73a1 1 0 0 0-.78-.37H14v1h5.11"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+  <symbol id="icon-dashboard" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></symbol>
+  <symbol id="icon-package" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></symbol>
+  <symbol id="icon-map" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></symbol>
+  <symbol id="icon-users" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="icon-user-cog" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"/></symbol>
+  <symbol id="icon-clipboard" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></symbol>
+  <symbol id="icon-user" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="icon-refresh" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></symbol>
+  <symbol id="icon-edit" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></symbol>
+  <symbol id="icon-trash" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></symbol>
+  <symbol id="icon-save" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></symbol>
+  <symbol id="icon-check" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="icon-x" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></symbol>
+  <symbol id="icon-log-out" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></symbol>
+  <symbol id="icon-menu" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="18" y2="18"/></symbol>
+  <symbol id="icon-wrench" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a2 2 0 0 1-2.51-2.51l-3.77 3.77Z"/><path d="m20 10 2 2v2l-1 1v2l-1 1h-2l-1-1h-2l-1 1V15h-3l-1-1V5l7 7Z"/><path d="M14.7 6.3 10 11"/><path d="m2 22 5-5"/></symbol>
+  <symbol id="icon-info" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" y2="12"/><line x1="12" x2="12" y1="8" y2="8"/></symbol>
+  <symbol id="icon-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor"/></symbol>
+</svg>
+
+<!-- ============================================================
+     LOADING GLOBAL
+     ============================================================ -->
+<div id="loading-overlay" class="loading-overlay">
+  <div class="loading-spinner" style="width:36px;height:36px;border-width:3px"></div>
+  <p>Carregando...</p>
+</div>
+
+<!-- ============================================================
+     TOAST CONTAINER
+     ============================================================ -->
+<div id="toast-container" class="toast-container"></div>
+
+<!-- ============================================================
+     PÁGINA DE LOGIN
+     ============================================================ -->
+<div id="page-login">
+  <div class="login-box">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="login-logo-icon"><svg class="icon"><use href="#icon-truck"/></svg></div>
+        <h1>TransLog</h1>
+        <p>Sistema de Gestão para Transportadoras</p>
+      </div>
+
+      <h2>Bem-vindo</h2>
+      <p class="sub">Faça login para acessar o painel</p>
+
+      <div id="login-error" class="login-error"></div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label>E-mail</label>
+          <input type="email" id="login-email" placeholder="seu@email.com" required autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label>Senha</label>
+          <input type="password" id="login-pass" placeholder="••••••••" required autocomplete="current-password" />
+        </div>
+        <button type="submit" id="login-btn" class="btn btn-primary btn-full" style="margin-top:8px">
+          Entrar no sistema
+        </button>
+      </form>
+
+      <p style="text-align:center;margin-top:20px;font-size:12px;color:var(--text3)">
+        Acesso padrão: admin@translog.com / admin123
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     APP PRINCIPAL (exibido após login)
+     ============================================================ -->
+<div id="app-layout" style="display:none">
+
+  <!-- ──────────── SIDEBAR ──────────── -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-inner">
+        <div class="sidebar-logo-icon"><svg class="icon"><use href="#icon-truck"/></svg></div>
+        <div class="sidebar-logo-text">
+          <h2>TransLog</h2>
+          <span>Transportadora</span>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Principal</div>
+
+      <div class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
+        <span class="nav-icon"><svg class="icon"><use href="#icon-dashboard"/></svg></span> Dashboard
+      </div>
+      <div class="nav-item" data-page="entregas" onclick="navigateTo('entregas')">
+        <span class="nav-icon"><svg class="icon"><use href="#icon-package"/></svg></span> Entregas
+      </div>
+      <div class="nav-item" data-page="rotas" onclick="navigateTo('rotas')">
+        <span class="nav-icon"><svg class="icon"><use href="#icon-map"/></svg></span> Rotas
+      </div>
+
+      <div class="nav-section-label" style="margin-top:8px">Cadastros</div>
+
+      <div class="nav-item" data-page="clientes" onclick="navigateTo('clientes')">
+        <span class="nav-icon"><svg class="icon"><use href="#icon-users"/></svg></span> Clientes
+      </div>
+      <div class="nav-item" data-page="motoristas" onclick="navigateTo('motoristas')">
+        <span class="nav-icon"><svg class="icon"><use href="#icon-user-cog"/></svg></span> Motoristas
+      </div>
+      <div class="nav-item" data-page="veiculos" onclick="navigateTo('veiculos')">
+        <span class="nav-icon"><svg class="icon"><use href="#icon-truck"/></svg></span> Veículos
+      </div>
+
+      <div class="nav-section-label" style="margin-top:8px">Relatórios</div>
+
+      <div class="nav-item" data-page="historico" onclick="navigateTo('historico')">
+        <span class="nav-icon"><svg class="icon"><use href="#icon-clipboard"/></svg></span> Histórico
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar"><svg class="icon"><use href="#icon-user"/></svg></div>
+        <div class="user-info">
+          <strong id="user-name">-</strong>
+          <small id="user-role">-</small>
+        </div>
+        <button class="btn-logout" onclick="logout()" title="Sair">⏻</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ──────────── CONTEÚDO PRINCIPAL ──────────── -->
+  <div class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" onclick="toggleSidebar()"><svg class="icon"><use href="#icon-menu"/></svg></button>
+        <span id="page-title" class="page-title">Dashboard</span>
+      </div>
+      <div class="topbar-right">
+        <span id="topbar-date" class="topbar-date"></span>
+      </div>
+    </header>
+
+    <!-- ÁREA DE CONTEÚDO -->
+    <main class="content-area">
+
+      <!-- ================================================
+           DASHBOARD
+           ================================================ -->
+      <section id="sec-dashboard" class="page-section active">
+        <div class="section-header">
+          <div>
+            <h2>Dashboard</h2>
+            <p>Visão geral da operação</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="loadDashboard()"><svg class="icon"><use href="#icon-refresh"/></svg> Atualizar</button>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card blue">
+            <div class="stat-icon">📦</div>
+            <div class="stat-value" id="dash-today">-</div>
+            <div class="stat-label">Entregas do dia</div>
+          </div>
+          <div class="stat-card yellow">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-value" id="dash-pending">-</div>
+            <div class="stat-label">Pendentes</div>
+          </div>
+          <div class="stat-card orange">
+            <div class="stat-icon">🚚</div>
+            <div class="stat-value" id="dash-route">-</div>
+            <div class="stat-label">Em Rota</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value" id="dash-done">-</div>
+            <div class="stat-label">Concluídas</div>
+          </div>
+          <div class="stat-card purple">
+            <div class="stat-icon">🧑‍✈️</div>
+            <div class="stat-value" id="dash-drivers">-</div>
+            <div class="stat-label">Motoristas ativos</div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <!-- Últimas entregas -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Últimas Entregas</h3>
+              <button class="btn btn-ghost btn-sm" onclick="navigateTo('entregas')">Ver todas →</button>
+            </div>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>NF</th><th>Cliente</th><th>Destino</th><th>Data</th><th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="dash-recent-tbody">
+                  <tr><td colspan="5" style="text-align:center;color:var(--text3);padding:24px">Carregando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Motoristas ativos -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Motoristas Ativos</h3>
+              <button class="btn btn-ghost btn-sm" onclick="navigateTo('motoristas')">Gerenciar →</button>
+            </div>
+            <div style="padding:12px 16px" id="dash-motoristas">
+              <p style="color:var(--text3);text-align:center;padding:24px">Carregando...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================
+           ENTREGAS
+           ================================================ -->
+      <section id="sec-entregas" class="page-section">
+        <div class="section-header">
+          <div>
+            <h2>Entregas</h2>
+            <p>Gerencie todas as entregas da transportadora</p>
+          </div>
+          <button class="btn btn-primary" onclick="openEntregaModal()">+ Nova Entrega</button>
+        </div>
+
+        <div class="filters-bar">
+          <input type="text" id="filter-q" placeholder="🔍 Buscar por NF..." />
+          <select id="filter-status" onchange="applyEntregasFilter()">
+            <option value="">Todos os status</option>
+            <option value="pendente">Pendente</option>
+            <option value="em_separacao">Em Separação</option>
+            <option value="em_rota">Em Rota</option>
+            <option value="entregue">Entregue</option>
+            <option value="cancelada">Cancelada</option>
+          </select>
+          <select id="filter-motorista" onchange="applyEntregasFilter()">
+            <option value="">Todos os motoristas</option>
+          </select>
+          <input type="date" id="filter-data" onchange="applyEntregasFilter()" />
+          <button class="btn btn-secondary btn-sm" onclick="
+            document.getElementById('filter-q').value='';
+            document.getElementById('filter-status').value='';
+            document.getElementById('filter-motorista').value='';
+            document.getElementById('filter-data').value='';
+            loadEntregas();
+          ">✕ Limpar</button>
+        </div>
+
+        <div class="card">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>NF</th><th>Cliente</th><th>Destino</th>
+                  <th>Data Prev.</th><th>Motorista</th><th>Veículo</th>
+                  <th>Status</th><th style="text-align:right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="entregas-tbody">
+                <tr><td colspan="8" style="text-align:center;color:var(--text3);padding:32px">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================
+           CLIENTES
+           ================================================ -->
+      <section id="sec-clientes" class="page-section">
+        <div class="section-header">
+          <div>
+            <h2>Clientes</h2>
+            <p>Cadastro de clientes da transportadora</p>
+          </div>
+          <button class="btn btn-primary" onclick="openClienteModal()">+ Novo Cliente</button>
+        </div>
+
+        <div class="filters-bar">
+          <input type="text" id="search-clientes" placeholder="🔍 Buscar cliente..." />
+        </div>
+
+        <div class="card">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome / Razão Social</th><th>CPF/CNPJ</th>
+                  <th>Telefone</th><th>E-mail</th><th>Cidade/UF</th><th style="text-align:right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="clientes-tbody">
+                <tr><td colspan="6" style="text-align:center;color:var(--text3);padding:32px">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================
+           MOTORISTAS
+           ================================================ -->
+      <section id="sec-motoristas" class="page-section">
+        <div class="section-header">
+          <div>
+            <h2>Motoristas</h2>
+            <p>Cadastro de motoristas</p>
+          </div>
+          <button class="btn btn-primary" onclick="openMotoristaModal()">+ Novo Motorista</button>
+        </div>
+
+        <div class="filters-bar">
+          <input type="text" id="search-motoristas" placeholder="🔍 Buscar motorista..." />
+        </div>
+
+        <div class="card">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome</th><th>Telefone</th><th>CNH</th><th>Status</th>
+                  <th style="text-align:right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="motoristas-tbody">
+                <tr><td colspan="5" style="text-align:center;color:var(--text3);padding:32px">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================
+           VEÍCULOS
+           ================================================ -->
+      <section id="sec-veiculos" class="page-section">
+        <div class="section-header">
+          <div>
+            <h2>Veículos</h2>
+            <p>Frota da transportadora</p>
+          </div>
+          <button class="btn btn-primary" onclick="openVeiculoModal()">+ Novo Veículo</button>
+        </div>
+
+        <div class="filters-bar">
+          <input type="text" id="search-veiculos" placeholder="🔍 Buscar por placa..." />
+        </div>
+
+        <div class="card">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Placa</th><th>Modelo</th><th>Tipo</th>
+                  <th>Capacidade</th><th>Status</th><th style="text-align:right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="veiculos-tbody">
+                <tr><td colspan="6" style="text-align:center;color:var(--text3);padding:32px">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================
+           ROTAS
+           ================================================ -->
+      <section id="sec-rotas" class="page-section">
+        <div class="section-header">
+          <div>
+            <h2>Rotas</h2>
+            <p>Agrupe e gerencie rotas de entrega</p>
+          </div>
+          <button class="btn btn-primary" onclick="openRotaModal()">+ Nova Rota</button>
+        </div>
+
+        <div class="filters-bar">
+          <input type="text" id="search-rotas" placeholder="🔍 Buscar rota..." />
+        </div>
+
+        <div class="card">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome da Rota</th><th>Data</th><th>Motorista</th>
+                  <th>Veículo</th><th>Status</th><th style="text-align:right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="rotas-tbody">
+                <tr><td colspan="6" style="text-align:center;color:var(--text3);padding:32px">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================
+           HISTÓRICO
+           ================================================ -->
+      <section id="sec-historico" class="page-section">
+        <div class="section-header">
+          <div>
+            <h2>Histórico</h2>
+            <p>Entregas e rotas finalizadas</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="loadHistorico()"><svg class="icon"><use href="#icon-refresh"/></svg> Atualizar</button>
+        </div>
+
+        <div class="dashboard-grid">
+          <!-- Rotas finalizadas -->
+          <div class="card">
+            <div class="card-header"><h3>Rotas Finalizadas</h3></div>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr><th>Rota</th><th>Data</th><th>Motorista</th><th>Veículo</th><th>Status</th></tr>
+                </thead>
+                <tbody id="hist-rotas-tbody">
+                  <tr><td colspan="5" style="text-align:center;color:var(--text3);padding:24px">Carregando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Entregas finalizadas -->
+          <div class="card">
+            <div class="card-header"><h3>Entregas Finalizadas</h3></div>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr><th>NF</th><th>Cliente</th><th>Destino</th><th>Data Prev.</th><th>Status</th></tr>
+                </thead>
+                <tbody id="hist-entregas-tbody">
+                  <tr><td colspan="5" style="text-align:center;color:var(--text3);padding:24px">Carregando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main><!-- /content-area -->
+  </div><!-- /main-content -->
+
+  <!-- ──────────── BOTTOM NAV (mobile) ──────────── -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
+      <span class="bnav-icon"><svg class="icon"><use href="#icon-dashboard"/></svg></span>
+      <span>Início</span>
+    </div>
+    <div class="bottom-nav-item" data-page="entregas" onclick="navigateTo('entregas')">
+      <span class="bnav-icon"><svg class="icon"><use href="#icon-package"/></svg></span>
+      <span>Entregas</span>
+    </div>
+    <div class="bottom-nav-item" data-page="rotas" onclick="navigateTo('rotas')">
+      <span class="bnav-icon"><svg class="icon"><use href="#icon-map"/></svg></span>
+      <span>Rotas</span>
+    </div>
+    <div class="bottom-nav-item" data-page="clientes" onclick="navigateTo('clientes')">
+      <span class="bnav-icon"><svg class="icon"><use href="#icon-users"/></svg></span>
+      <span>Clientes</span>
+    </div>
+    <div class="bottom-nav-item" data-page="motoristas" onclick="navigateTo('motoristas')">
+      <span class="bnav-icon"><svg class="icon"><use href="#icon-user-cog"/></svg></span>
+      <span>Motoristas</span>
+    </div>
+  </nav>
+
+</div><!-- /app-layout -->
+
+<!-- ============================================================
+     MODAIS
+     ============================================================ -->
+
+<!-- ── Modal: Nova/Editar Entrega ── -->
+<div id="modal-entrega" class="modal-overlay">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3 id="modal-entrega-title">Nova Entrega</h3>
+      <button class="modal-close" onclick="closeModal('modal-entrega')"><svg class="icon"><use href="#icon-x"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <form id="form-entrega">
+        <input type="hidden" id="entrega-id" />
+        <div class="form-row">
+          <div class="form-group">
+            <label>Número da NF *</label>
+            <input type="text" id="entrega-nf" placeholder="000001" required />
+          </div>
+          <div class="form-group">
+            <label>Cliente</label>
+            <select id="entrega-cliente"></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Destino (Endereço) *</label>
+          <input type="text" id="entrega-destino" placeholder="Rua, número, bairro..." required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Cidade *</label>
+            <input type="text" id="entrega-cidade" placeholder="São Paulo" required />
+          </div>
+          <div class="form-group">
+            <label>UF *</label>
+            <input type="text" id="entrega-uf" placeholder="SP" maxlength="2" style="text-transform:uppercase" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Data Prevista</label>
+            <input type="date" id="entrega-data" />
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="entrega-status">
+              <option value="pendente">Pendente</option>
+              <option value="em_separacao">Em Separação</option>
+              <option value="em_rota">Em Rota</option>
+              <option value="entregue">Entregue</option>
+              <option value="cancelada">Cancelada</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Motorista</label>
+            <select id="entrega-motorista"></select>
+          </div>
+          <div class="form-group">
+            <label>Veículo</label>
+            <select id="entrega-veiculo"></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Observação</label>
+          <textarea id="entrega-obs" placeholder="Informações adicionais..."></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-entrega')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEntrega()"><svg class="icon"><use href="#icon-save"/></svg> Salvar Entrega</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Alterar Status ── -->
+<div id="modal-status" class="modal-overlay">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <h3>Alterar Status</h3>
+      <button class="modal-close" onclick="closeModal('modal-status')"><svg class="icon"><use href="#icon-x"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="status-id" />
+      <div class="form-group">
+        <label>Novo Status</label>
+        <select id="status-select"></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-status')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveStatus()"><svg class="icon"><use href="#icon-check"/></svg> Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Novo/Editar Cliente ── -->
+<div id="modal-cliente" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-cliente-title">Novo Cliente</h3>
+      <button class="modal-close" onclick="closeModal('modal-cliente')"><svg class="icon"><use href="#icon-x"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <form id="form-cliente">
+        <input type="hidden" id="cliente-id" />
+        <div class="form-group">
+          <label>Nome / Razão Social *</label>
+          <input type="text" id="cliente-nome" placeholder="Nome completo ou razão social" required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>CPF / CNPJ</label>
+            <input type="text" id="cliente-doc" placeholder="000.000.000-00" />
+          </div>
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="text" id="cliente-tel" placeholder="(11) 99999-9999" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>E-mail</label>
+          <input type="email" id="cliente-email" placeholder="email@empresa.com.br" />
+        </div>
+        <div class="form-group">
+          <label>Endereço</label>
+          <input type="text" id="cliente-end" placeholder="Rua, número, bairro..." />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Cidade</label>
+            <input type="text" id="cliente-cidade" placeholder="Cidade" />
+          </div>
+          <div class="form-group">
+            <label>UF</label>
+            <input type="text" id="cliente-uf" placeholder="SP" maxlength="2" style="text-transform:uppercase" />
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-cliente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCliente()"><svg class="icon"><use href="#icon-save"/></svg> Salvar Cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Novo/Editar Motorista ── -->
+<div id="modal-motorista" class="modal-overlay">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <h3 id="modal-motorista-title">Novo Motorista</h3>
+      <button class="modal-close" onclick="closeModal('modal-motorista')"><svg class="icon"><use href="#icon-x"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <form id="form-motorista">
+        <input type="hidden" id="motorista-id" />
+        <div class="form-group">
+          <label>Nome *</label>
+          <input type="text" id="motorista-nome" placeholder="Nome completo" required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="text" id="motorista-tel" placeholder="(11) 99999-9999" />
+          </div>
+          <div class="form-group">
+            <label>CNH</label>
+            <input type="text" id="motorista-cnh" placeholder="Número da CNH" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="motorista-status">
+            <option value="ativo">Ativo</option>
+            <option value="inativo">Inativo</option>
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-motorista')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveMotorista()"><svg class="icon"><use href="#icon-save"/></svg> Salvar Motorista</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Novo/Editar Veículo ── -->
+<div id="modal-veiculo" class="modal-overlay">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <h3 id="modal-veiculo-title">Novo Veículo</h3>
+      <button class="modal-close" onclick="closeModal('modal-veiculo')"><svg class="icon"><use href="#icon-x"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <form id="form-veiculo">
+        <input type="hidden" id="veiculo-id" />
+        <div class="form-row">
+          <div class="form-group">
+            <label>Placa *</label>
+            <input type="text" id="veiculo-placa" placeholder="ABC-1234" style="text-transform:uppercase" required />
+          </div>
+          <div class="form-group">
+            <label>Modelo *</label>
+            <input type="text" id="veiculo-modelo" placeholder="Volkswagen Delivery" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tipo</label>
+            <input type="text" id="veiculo-tipo" placeholder="Baú, Carga seca, Refrigerado..." />
+          </div>
+          <div class="form-group">
+            <label>Capacidade</label>
+            <input type="text" id="veiculo-cap" placeholder="3 toneladas" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="veiculo-status">
+            <option value="disponivel">Disponível</option>
+            <option value="em_rota">Em Rota</option>
+            <option value="manutencao">Manutenção</option>
+            <option value="inativo">Inativo</option>
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-veiculo')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveVeiculo()"><svg class="icon"><use href="#icon-save"/></svg> Salvar Veículo</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Nova/Editar Rota ── -->
+<div id="modal-rota" class="modal-overlay">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <h3 id="modal-rota-title">Nova Rota</h3>
+      <button class="modal-close" onclick="closeModal('modal-rota')"><svg class="icon"><use href="#icon-x"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <form id="form-rota">
+        <input type="hidden" id="rota-id" />
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nome da Rota *</label>
+            <input type="text" id="rota-nome" placeholder="Rota SP Norte - 01/06" required />
+          </div>
+          <div class="form-group">
+            <label>Data *</label>
+            <input type="date" id="rota-data" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Motorista</label>
+            <select id="rota-motorista"></select>
+          </div>
+          <div class="form-group">
+            <label>Veículo</label>
+            <select id="rota-veiculo"></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="rota-status">
+            <option value="aberta">Aberta</option>
+            <option value="em_andamento">Em Andamento</option>
+            <option value="finalizada">Finalizada</option>
+            <option value="cancelada">Cancelada</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Observação</label>
+          <textarea id="rota-obs" placeholder="Informações sobre a rota..."></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-rota')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveRota()"><svg class="icon"><use href="#icon-save"/></svg> Salvar Rota</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Detalhes da Rota ── -->
+<div id="modal-rota-detail" class="modal-overlay">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3 id="rota-detail-title">Detalhes da Rota</h3>
+      <button class="modal-close" onclick="closeModal('modal-rota-detail')"><svg class="icon"><use href="#icon-x"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="rota-detail-id" />
+
+      <!-- Info da rota -->
+      <div id="rota-detail-info"></div>
+
+      <!-- Entregas vinculadas -->
+      <div style="margin-top:20px;margin-bottom:12px">
+        <h4 style="font-size:14px;color:var(--text2);margin-bottom:12px"><svg class="icon"><use href="#icon-package"/></svg> Entregas Vinculadas</h4>
+        <div id="rota-entregas-list"></div>
+      </div>
+
+      <!-- Adicionar entrega -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-s);padding:16px;margin-top:16px">
+        <h4 style="font-size:13px;margin-bottom:10px;color:var(--text2)">Vincular Entrega</h4>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <select id="add-entrega-select" style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-s);padding:9px 12px;color:var(--text);font-size:13px;outline:none;min-width:200px">
+            <option value="">- Selecione uma entrega livre -</option>
+          </select>
+          <button class="btn btn-success" onclick="vincularEntrega()">Vincular</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between">
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" onclick="copiarResumoRota()"><svg class="icon"><use href="#icon-clipboard"/></svg> Copiar para WhatsApp</button>
+        <button class="btn btn-success" onclick="finalizarRota()"><svg class="icon"><use href="#icon-check"/></svg> Finalizar Rota</button>
+      </div>
+      <button class="btn btn-ghost" onclick="closeModal('modal-rota-detail')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Confirmação de Logout ── -->
+<div id="modal-logout" class="modal-overlay">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <h3>Sair do Sistema</h3>
+      <button class="modal-close" onclick="closeModal('modal-logout')"><svg class="icon"><use href="#icon-x"/></svg></button>
+    </div>
+    <div class="modal-body" style="text-align:center; padding: 30px 20px;">
+      <div style="font-size: 48px; margin-bottom: 15px; color:var(--red)"><svg class="icon"><use href="#icon-log-out"/></svg></div>
+      <p style="color:var(--text2); font-size: 15px;">Deseja realmente encerrar sua sessão no <strong>TransLog</strong>?</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-logout')">Cancelar</button>
+      <button class="btn btn-danger" onclick="executeLogout()">Sair agora</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SCRIPTS
+     ============================================================ -->
+<script src="config.js"></script>
+<script src="app.js"></script>
+
+  <script src="./config.js?v=2"></script>
+  <script src="./app.js?v=2"></script>
+</body>
+</html>
